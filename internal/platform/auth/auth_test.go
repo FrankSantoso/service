@@ -3,7 +3,7 @@ package auth_test
 import (
 	"testing"
 
-	"github.com/ardanlabs/service/internal/platform/auth"
+	"github.com/FrankSantoso/service/internal/platform/auth"
 	jwt "github.com/dgrijalva/jwt-go"
 )
 

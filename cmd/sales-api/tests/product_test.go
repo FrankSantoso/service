@@ -9,10 +9,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ardanlabs/service/cmd/sales-api/internal/handlers"
-	"github.com/ardanlabs/service/internal/platform/web"
-	"github.com/ardanlabs/service/internal/product"
-	"github.com/ardanlabs/service/internal/tests"
+	"github.com/FrankSantoso/service/cmd/sales-api/internal/handlers"
+	"github.com/FrankSantoso/service/internal/platform/web"
+	"github.com/FrankSantoso/service/internal/product"
+	"github.com/FrankSantoso/service/internal/tests"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 )

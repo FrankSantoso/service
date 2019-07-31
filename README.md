@@ -60,7 +60,7 @@ This project contains three services and uses 3rd party services such as MongoDB
 You can use the traditional `go get` command to download this project into your configured GOPATH.
 
 ```
-$ GO111MODULE=off go get -u gitHub.com/ardanlabs/service
+$ GO111MODULE=off go get -u github.com/FrankSantoso/service
 ```
 
 ### Go Modules
@@ -68,7 +68,7 @@ $ GO111MODULE=off go get -u gitHub.com/ardanlabs/service
 This project is using Go Module support for vendoring dependencies. We are using the `tidy` and `vendor` commands to maintain the dependencies and make sure the project can create reproducible builds. This project assumes the source code will be inside your GOPATH within the traditional location.
 
 ```
-$ cd $GOPATH/src/github.com/ardanlabs/service
+$ cd $GOPATH/src/github.com/FrankSantoso/service
 $ GO111MODULE=off go mod tidy
 $ GO111MODULE=off go mod vendor
 ```
@@ -92,7 +92,7 @@ A `makefile` has also been provide to make building, running and testing the sof
 Navigate to the root of the project and use the `makefile` to build all of the services.
 
 ```
-$ cd $GOPATH/src/github.com/ardanlabs/service
+$ cd $GOPATH/src/github.com/FrankSantoso/service
 $ make all
 ```
 
@@ -101,7 +101,7 @@ $ make all
 Navigate to the root of the project and use the `makefile` to run all of the services.
 
 ```
-$ cd $GOPATH/src/github.com/ardanlabs/service
+$ cd $GOPATH/src/github.com/FrankSantoso/service
 $ make up
 ```
 

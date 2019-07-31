@@ -9,12 +9,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ardanlabs/service/internal/platform/auth"
-	"github.com/ardanlabs/service/internal/platform/database"
-	"github.com/ardanlabs/service/internal/platform/database/databasetest"
-	"github.com/ardanlabs/service/internal/platform/web"
-	"github.com/ardanlabs/service/internal/schema"
-	"github.com/ardanlabs/service/internal/user"
+	"github.com/FrankSantoso/service/internal/platform/auth"
+	"github.com/FrankSantoso/service/internal/platform/database"
+	"github.com/FrankSantoso/service/internal/platform/database/databasetest"
+	"github.com/FrankSantoso/service/internal/platform/web"
+	"github.com/FrankSantoso/service/internal/schema"
+	"github.com/FrankSantoso/service/internal/user"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )

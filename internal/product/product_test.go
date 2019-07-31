@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ardanlabs/service/internal/platform/auth"
-	"github.com/ardanlabs/service/internal/product"
-	"github.com/ardanlabs/service/internal/tests"
+	"github.com/FrankSantoso/service/internal/platform/auth"
+	"github.com/FrankSantoso/service/internal/product"
+	"github.com/FrankSantoso/service/internal/tests"
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
 )

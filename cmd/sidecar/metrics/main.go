@@ -10,10 +10,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ardanlabs/service/cmd/sidecar/metrics/internal/collector"
-	"github.com/ardanlabs/service/cmd/sidecar/metrics/internal/publisher"
-	"github.com/ardanlabs/service/cmd/sidecar/metrics/internal/publisher/expvar"
-	"github.com/ardanlabs/service/internal/platform/conf"
+	"github.com/FrankSantoso/service/cmd/sidecar/metrics/internal/collector"
+	"github.com/FrankSantoso/service/cmd/sidecar/metrics/internal/publisher"
+	"github.com/FrankSantoso/service/cmd/sidecar/metrics/internal/publisher/expvar"
+	"github.com/FrankSantoso/service/internal/platform/conf"
 )
 
 func main() {

@@ -40,7 +40,7 @@ down:
 	docker-compose down
 
 test:
-	cd "$$GOPATH/src/github.com/ardanlabs/service"
+	cd "$$GOPATH/src/github.com/FrankSantoso/service"
 	go test ./...
 
 clean:

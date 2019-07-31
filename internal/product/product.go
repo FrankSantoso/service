@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/ardanlabs/service/internal/platform/auth"
+	"github.com/FrankSantoso/service/internal/platform/auth"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"

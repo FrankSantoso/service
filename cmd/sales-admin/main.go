@@ -13,11 +13,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/ardanlabs/service/internal/platform/auth"
-	"github.com/ardanlabs/service/internal/platform/conf"
-	"github.com/ardanlabs/service/internal/platform/database"
-	"github.com/ardanlabs/service/internal/schema"
-	"github.com/ardanlabs/service/internal/user"
+	"github.com/FrankSantoso/service/internal/platform/auth"
+	"github.com/FrankSantoso/service/internal/platform/conf"
+	"github.com/FrankSantoso/service/internal/platform/database"
+	"github.com/FrankSantoso/service/internal/schema"
+	"github.com/FrankSantoso/service/internal/user"
 	"github.com/pkg/errors"
 )
 
