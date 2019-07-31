@@ -1,6 +1,17 @@
 SHELL := /bin/bash
+MIGRATIONDIR := internal/schema/migrations
+SEEDSDIR := internal/schema/seeds
+MIGRATIONS := $(wildcard ${MIGRATIONDIR}/*.sql)
+SEEDS := $(wildcard ${SEEDSDIR}/*.sql)
 
 all: keys sales-api metrics
+
+bindata: 
+	go-bindata -o ${MIGRATIONDIR}/bindata_migrations.go \
+		-prefix ${MIGRATIONDIR} -pkg migrations ${MIGRATIONDIR}/*.sql
+	
+	go-bindata -o ${SEEDSDIR}/bindata_seeds.go \
+		-prefix ${SEEDSDIR} -pkg seeds ${SEEDSDIR}/*.sql
 
 keys:
 	go run ./cmd/sales-admin/main.go keygen private.pem

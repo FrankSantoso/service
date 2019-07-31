@@ -40,6 +40,7 @@ func run() error {
 			Host       string `conf:"default:0.0.0.0"`
 			Name       string `conf:"default:postgres"`
 			DisableTLS bool   `conf:"default:false"`
+			QueryHook  bool   `conf:"default:false"`
 		}
 		Args conf.Args
 	}
@@ -63,6 +64,7 @@ func run() error {
 		Host:       cfg.DB.Host,
 		Name:       cfg.DB.Name,
 		DisableTLS: cfg.DB.DisableTLS,
+		QueryHook:  cfg.DB.QueryHook,
 	}
 
 	var err error
@@ -93,7 +95,7 @@ func migrate(cfg database.Config) error {
 	}
 	defer db.Close()
 
-	if err := schema.Migrate(db); err != nil {
+	if err := schema.Migrate(cfg, true); err != nil {
 		return err
 	}
 
@@ -108,7 +110,7 @@ func seed(cfg database.Config) error {
 	}
 	defer db.Close()
 
-	if err := schema.Seed(db); err != nil {
+	if err := schema.Seed(cfg, true); err != nil {
 		return err
 	}
 
