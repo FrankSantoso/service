@@ -15,8 +15,8 @@ import (
 	"github.com/FrankSantoso/service/internal/platform/web"
 	"github.com/FrankSantoso/service/internal/schema"
 	"github.com/FrankSantoso/service/internal/user"
+	"github.com/go-pg/pg/v9"
 	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
 )
 
 // Success and failure markers.
@@ -40,18 +40,21 @@ const (
 //
 // It returns the database to use as well as a function to call at the end of
 // the test.
-func NewUnit(t *testing.T) (*sqlx.DB, func()) {
+func NewUnit(t *testing.T) (*pg.DB, database.Config, func()) {
 	t.Helper()
 
 	c := databasetest.StartContainer(t)
 
-	db, err := database.Open(database.Config{
+	connConfig := database.Config{
 		User:       "postgres",
 		Password:   "postgres",
 		Host:       c.Host,
 		Name:       "postgres",
 		DisableTLS: true,
-	})
+		QueryHook:  true,
+	}
+
+	db, err := database.Open(connConfig)
 	if err != nil {
 		t.Fatalf("opening database connection: %v", err)
 	}
@@ -63,7 +66,7 @@ func NewUnit(t *testing.T) (*sqlx.DB, func()) {
 	var pingError error
 	maxAttempts := 20
 	for attempts := 1; attempts <= maxAttempts; attempts++ {
-		pingError = db.Ping()
+		_, pingError = db.Exec("SELECT 1")
 		if pingError == nil {
 			break
 		}
@@ -76,7 +79,7 @@ func NewUnit(t *testing.T) (*sqlx.DB, func()) {
 		t.Fatalf("waiting for database to be ready: %v", pingError)
 	}
 
-	if err := schema.Migrate(db); err != nil {
+	if err := schema.Migrate(connConfig, true); err != nil {
 		databasetest.StopContainer(t, c)
 		t.Fatalf("migrating: %s", err)
 	}
@@ -89,12 +92,12 @@ func NewUnit(t *testing.T) (*sqlx.DB, func()) {
 		databasetest.StopContainer(t, c)
 	}
 
-	return db, teardown
+	return db, connConfig, teardown
 }
 
 // Test owns state for running and shutting down tests.
 type Test struct {
-	DB            *sqlx.DB
+	DB            *pg.DB
 	Log           *log.Logger
 	Authenticator *auth.Authenticator
 
@@ -107,9 +110,9 @@ func NewIntegration(t *testing.T) *Test {
 	t.Helper()
 
 	// Initialize and seed database. Store the cleanup function call later.
-	db, cleanup := NewUnit(t)
+	db, connConfig, cleanup := NewUnit(t)
 
-	if err := schema.Seed(db); err != nil {
+	if err := schema.Seed(connConfig, true); err != nil {
 		t.Fatal(err)
 	}
 

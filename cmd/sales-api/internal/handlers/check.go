@@ -6,13 +6,14 @@ import (
 
 	"github.com/FrankSantoso/service/internal/platform/database"
 	"github.com/FrankSantoso/service/internal/platform/web"
-	"github.com/jmoiron/sqlx"
+
+	"github.com/go-pg/pg/v9"
 	"go.opencensus.io/trace"
 )
 
 // Check provides support for orchestration health checks.
 type Check struct {
-	db *sqlx.DB
+	db *pg.DB
 
 	// ADD OTHER STATE LIKE THE LOGGER IF NEEDED.
 }

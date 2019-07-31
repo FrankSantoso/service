@@ -7,14 +7,14 @@ import (
 	"github.com/FrankSantoso/service/internal/platform/auth"
 	"github.com/FrankSantoso/service/internal/platform/web"
 	"github.com/FrankSantoso/service/internal/user"
-	"github.com/jmoiron/sqlx"
+	"github.com/go-pg/pg/v9"
 	"github.com/pkg/errors"
 	"go.opencensus.io/trace"
 )
 
 // User represents the User API method handler set.
 type User struct {
-	db            *sqlx.DB
+	db            *pg.DB
 	authenticator *auth.Authenticator
 
 	// ADD OTHER STATE LIKE THE LOGGER AND CONFIG HERE.

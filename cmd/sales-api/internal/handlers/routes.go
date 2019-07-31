@@ -8,11 +8,11 @@ import (
 	"github.com/FrankSantoso/service/internal/mid"
 	"github.com/FrankSantoso/service/internal/platform/auth" // Import is removed in final PR
 	"github.com/FrankSantoso/service/internal/platform/web"
-	"github.com/jmoiron/sqlx"
+	"github.com/go-pg/pg/v9"
 )
 
 // API constructs an http.Handler with all application routes defined.
-func API(shutdown chan os.Signal, log *log.Logger, db *sqlx.DB, authenticator *auth.Authenticator) http.Handler {
+func API(shutdown chan os.Signal, log *log.Logger, db *pg.DB, authenticator *auth.Authenticator) http.Handler {
 
 	// Construct the web.App which holds all routes as well as common Middleware.
 	app := web.NewApp(shutdown, log, mid.Logger(log), mid.Errors(log), mid.Metrics(), mid.Panics(log))

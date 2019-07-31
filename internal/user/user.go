@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/FrankSantoso/service/internal/platform/auth"
+	"github.com/go-pg/pg/v9"
 	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"go.opencensus.io/trace"
 	"golang.org/x/crypto/bcrypt"
@@ -31,14 +31,12 @@ var (
 )
 
 // List retrieves a list of existing users from the database.
-func List(ctx context.Context, db *sqlx.DB) ([]User, error) {
+func List(ctx context.Context, db *pg.DB) ([]User, error) {
 	ctx, span := trace.StartSpan(ctx, "internal.user.List")
 	defer span.End()
 
 	users := []User{}
-	const q = `SELECT * FROM users`
-
-	if err := db.SelectContext(ctx, &users, q); err != nil {
+	if err := db.Model(&users).Select(); err != nil {
 		return nil, errors.Wrap(err, "selecting users")
 	}
 
@@ -46,7 +44,7 @@ func List(ctx context.Context, db *sqlx.DB) ([]User, error) {
 }
 
 // Retrieve gets the specified user from the database.
-func Retrieve(ctx context.Context, claims auth.Claims, db *sqlx.DB, id string) (*User, error) {
+func Retrieve(ctx context.Context, claims auth.Claims, db *pg.DB, id string) (*User, error) {
 	ctx, span := trace.StartSpan(ctx, "internal.user.Retrieve")
 	defer span.End()
 
@@ -60,12 +58,14 @@ func Retrieve(ctx context.Context, claims auth.Claims, db *sqlx.DB, id string) (
 	}
 
 	var u User
-	const q = `SELECT * FROM users WHERE user_id = $1`
-	if err := db.GetContext(ctx, &u, q, id); err != nil {
-		if err == sql.ErrNoRows {
-			return nil, ErrNotFound
-		}
 
+	err := db.Model(u).Where("user_id = ?", id).First()
+
+	if err == pg.ErrNoRows {
+		return nil, ErrNotFound
+	}
+
+	if err != nil {
 		return nil, errors.Wrapf(err, "selecting user %q", id)
 	}
 
@@ -73,7 +73,7 @@ func Retrieve(ctx context.Context, claims auth.Claims, db *sqlx.DB, id string) (
 }
 
 // Create inserts a new user into the database.
-func Create(ctx context.Context, db *sqlx.DB, n NewUser, now time.Time) (*User, error) {
+func Create(ctx context.Context, db *pg.DB, n NewUser, now time.Time) (*User, error) {
 	ctx, span := trace.StartSpan(ctx, "internal.user.Create")
 	defer span.End()
 
@@ -92,15 +92,13 @@ func Create(ctx context.Context, db *sqlx.DB, n NewUser, now time.Time) (*User, 
 		DateUpdated:  now.UTC(),
 	}
 
-	const q = `INSERT INTO users
-		(user_id, name, email, password_hash, roles, date_created, date_updated)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)`
-	_, err = db.ExecContext(
-		ctx, q,
-		u.ID, u.Name, u.Email,
-		u.PasswordHash, u.Roles,
-		u.DateCreated, u.DateUpdated,
-	)
+	err = db.RunInTransaction(func(tx *pg.Tx) (err error) {
+		if _, err = tx.Model(u).Insert(); err != nil {
+			return err
+		}
+		return nil
+	})
+
 	if err != nil {
 		return nil, errors.Wrap(err, "inserting user")
 	}
@@ -109,7 +107,7 @@ func Create(ctx context.Context, db *sqlx.DB, n NewUser, now time.Time) (*User, 
 }
 
 // Update replaces a user document in the database.
-func Update(ctx context.Context, claims auth.Claims, db *sqlx.DB, id string, upd UpdateUser, now time.Time) error {
+func Update(ctx context.Context, claims auth.Claims, db *pg.DB, id string, upd UpdateUser, now time.Time) error {
 	ctx, span := trace.StartSpan(ctx, "internal.user.Update")
 	defer span.End()
 
@@ -137,17 +135,12 @@ func Update(ctx context.Context, claims auth.Claims, db *sqlx.DB, id string, upd
 
 	u.DateUpdated = now
 
-	const q = `UPDATE users SET
-		"name" = $2,
-		"email" = $3,
-		"roles" = $4,
-		"password_hash" = $5,
-		"date_updated" = $6
-		WHERE user_id = $1`
-	_, err = db.ExecContext(ctx, q, id,
-		u.Name, u.Email, u.Roles,
-		u.PasswordHash, u.DateUpdated,
-	)
+	err = db.RunInTransaction(func(tx *pg.Tx) error {
+		if _, err := tx.Model(u).UpdateNotZero(); err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
 		return errors.Wrap(err, "updating user")
 	}
@@ -156,7 +149,7 @@ func Update(ctx context.Context, claims auth.Claims, db *sqlx.DB, id string, upd
 }
 
 // Delete removes a user from the database.
-func Delete(ctx context.Context, db *sqlx.DB, id string) error {
+func Delete(ctx context.Context, db *pg.DB, id string) error {
 	ctx, span := trace.StartSpan(ctx, "internal.user.Delete")
 	defer span.End()
 
@@ -164,9 +157,16 @@ func Delete(ctx context.Context, db *sqlx.DB, id string) error {
 		return ErrInvalidID
 	}
 
-	const q = `DELETE FROM users WHERE user_id = $1`
+	var u = new(User)
 
-	if _, err := db.ExecContext(ctx, q, id); err != nil {
+	err := db.RunInTransaction(func(tx *pg.Tx) error {
+		if _, err := tx.Model(&u).Where("user_id = ?", id).Delete(); err != nil {
+			return err
+		}
+		return nil
+	})
+
+	if err != nil {
 		return errors.Wrapf(err, "deleting user %s", id)
 	}
 
@@ -176,7 +176,7 @@ func Delete(ctx context.Context, db *sqlx.DB, id string) error {
 // Authenticate finds a user by their email and verifies their password. On
 // success it returns a Claims value representing this user. The claims can be
 // used to generate a token for future authentication.
-func Authenticate(ctx context.Context, db *sqlx.DB, now time.Time, email, password string) (auth.Claims, error) {
+func Authenticate(ctx context.Context, db *pg.DB, now time.Time, email, password string) (auth.Claims, error) {
 	ctx, span := trace.StartSpan(ctx, "internal.user.Authenticate")
 	defer span.End()
 

@@ -7,14 +7,14 @@ import (
 	"github.com/FrankSantoso/service/internal/platform/auth"
 	"github.com/FrankSantoso/service/internal/platform/web"
 	"github.com/FrankSantoso/service/internal/product"
-	"github.com/jmoiron/sqlx"
+	"github.com/go-pg/pg/v9"
 	"github.com/pkg/errors"
 	"go.opencensus.io/trace"
 )
 
 // Product represents the Product API method handler set.
 type Product struct {
-	db *sqlx.DB
+	db *pg.DB
 
 	// ADD OTHER STATE LIKE THE LOGGER IF NEEDED.
 }
