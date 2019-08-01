@@ -1,18 +1,13 @@
 SHELL := /bin/bash
 MIGRATIONDIR := internal/schema/migrations
-SEEDSDIR := internal/schema/seeds
 MIGRATIONS := $(wildcard ${MIGRATIONDIR}/*.sql)
-SEEDS := $(wildcard ${SEEDSDIR}/*.sql)
 
-all: keys sales-api metrics
+all: bindata keys sales-api metrics
 
 bindata: 
 	go-bindata -o ${MIGRATIONDIR}/bindata_migrations.go \
 		-prefix ${MIGRATIONDIR} -pkg migrations ${MIGRATIONDIR}/*.sql
 	
-	go-bindata -o ${SEEDSDIR}/bindata_seeds.go \
-		-prefix ${SEEDSDIR} -pkg seeds ${SEEDSDIR}/*.sql
-
 keys:
 	go run ./cmd/sales-admin/main.go keygen private.pem
 
@@ -22,12 +17,12 @@ admin:
 migrate:
 	go run ./cmd/sales-admin/main.go --db-disable-tls=1 migrate
 
-seed: migrate
-	go run ./cmd/sales-admin/main.go --db-disable-tls=1 seed
+# seed: migrate
+# 	go run ./cmd/sales-admin/main.go --db-disable-tls=1 seed
 
 sales-api:
 	docker build \
-		-t gcr.io/ardan-starter-kit/sales-api-amd64:1.0 \
+		-t gcr.io/service-kit/sales-api-amd64:1.0 \
 		--build-arg PACKAGE_NAME=sales-api \
 		--build-arg VCS_REF=`git rev-parse HEAD` \
 		--build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
@@ -36,7 +31,7 @@ sales-api:
 
 metrics:
 	docker build \
-		-t gcr.io/ardan-starter-kit/metrics-amd64:1.0 \
+		-t gcr.io/service-kit/metrics-amd64:1.0 \
 		--build-arg PACKAGE_NAME=metrics \
 		--build-arg PACKAGE_PREFIX=sidecar/ \
 		--build-arg VCS_REF=`git rev-parse HEAD` \

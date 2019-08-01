@@ -32,11 +32,12 @@ func List(ctx context.Context, db *pg.DB) ([]Product, error) {
 
 	products := []Product{}
 
-	err := db.Model(&products).ColumnExpr("products.*").
-		ColumnExpr(`COALESCE(SUM(sales.quantity), 0) AS sold,
-		COALESCE(SUM(sales.paid), 0) AS revenue`).
-		Join("LEFT JOIN sales ON products.product_id = sales.product_id").
-		Group("products.products_id").
+	err := db.ModelContext(ctx, &products).
+		ColumnExpr("p.*").
+		ColumnExpr("COALESCE(SUM(s.quantity),0) AS sold").
+		ColumnExpr("COALESCE(SUM(s.paid), 0) AS revenue").
+		Join("LEFT JOIN sales AS s ON s.product_id = p.product_id").
+		Group("p.product_id").
 		Select()
 
 	if err != nil {
@@ -57,13 +58,14 @@ func Create(ctx context.Context, db *pg.DB, user auth.Claims, np NewProduct, now
 		Name:        np.Name,
 		Cost:        np.Cost,
 		Quantity:    np.Quantity,
+		Sold:        0,
 		UserID:      user.Subject,
 		DateCreated: now.UTC(),
 		DateUpdated: now.UTC(),
 	}
 
 	err := db.RunInTransaction(func(tx *pg.Tx) error {
-		if _, err := tx.Model(p).Insert(); err != nil {
+		if _, err := tx.Model(&p).Insert(); err != nil {
 			return err
 		}
 		return nil
@@ -87,17 +89,18 @@ func Retrieve(ctx context.Context, db *pg.DB, id string) (*Product, error) {
 
 	var p Product
 
-	err := db.Model(p).ColumnExpr("products.*").
-		ColumnExpr(`COALESCE(SUM(sales.quantity), 0) AS sold,
-		COALESCE(SUM(sales.paid), 0) AS revenue`).
-		Join("LEFT JOIN sales ON products.product_id = sales.product_id").
-		Group("products.products_id").
-		Where("products.product_id = ?", id).
+	err := db.ModelContext(ctx, &p).
+		ColumnExpr("p.*").
+		ColumnExpr("COALESCE(SUM(s.quantity),0) AS sold").
+		ColumnExpr("COALESCE(SUM(s.paid), 0) AS revenue").
+		Join("LEFT JOIN sales AS s ON s.product_id = p.product_id").
+		Group("p.product_id").
+		Where("p.product_id = ?", id).
 		First()
 
 	if err != nil {
 		if err == pg.ErrNoRows {
-			return nil, errors.Wrap(err, "no record found")
+			return nil, ErrNotFound
 		}
 		return nil, errors.Wrap(err, "retrieving single product")
 	}
@@ -135,11 +138,14 @@ func Update(ctx context.Context, db *pg.DB, user auth.Claims, id string, update 
 	p.DateUpdated = now
 
 	err = db.RunInTransaction(func(tx *pg.Tx) error {
-		if _, err := tx.Model(p).UpdateNotZero(); err != nil {
+		if _, err := tx.ModelContext(ctx, p).Where("product_id = ?", id).
+			UpdateNotZero(); err != nil {
 			return err
 		}
 		return nil
 	})
+
+	// _, err = db.ModelContext(ctx, p).Where("product_id = ?", id).UpdateNotZero()
 
 	if err != nil {
 		return errors.Wrap(err, "updating product")
@@ -160,7 +166,10 @@ func Delete(ctx context.Context, db *pg.DB, id string) error {
 	var p = new(Product)
 
 	err := db.RunInTransaction(func(tx *pg.Tx) error {
-		if _, err := tx.Model(p).Where("product_id = ?", id).Delete(); err != nil {
+		if _, err := tx.ModelContext(ctx, p).Where("product_id = ?", id).Delete(); err != nil {
+			if err == pg.ErrNoRows {
+				return ErrNotFound
+			}
 			return err
 		}
 		return nil

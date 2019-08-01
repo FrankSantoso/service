@@ -105,11 +105,11 @@ func TestParse_Args(t *testing.T) {
 			Args conf.Args
 		}
 
-		args := []string{"--port", "9000", "migrate", "seed"}
+		args := []string{"--port", "9000", "migrate"}
 
 		want := configArgs{
 			Port: 9000,
-			Args: conf.Args{"migrate", "seed"},
+			Args: conf.Args{"migrate"},
 		}
 
 		var cfg configArgs

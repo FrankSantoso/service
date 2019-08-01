@@ -37,7 +37,7 @@ func run() error {
 		DB struct {
 			User       string `conf:"default:postgres"`
 			Password   string `conf:"default:postgres,noprint"`
-			Host       string `conf:"default:0.0.0.0"`
+			Host       string `conf:"default:127.0.0.1"`
 			Name       string `conf:"default:postgres"`
 			DisableTLS bool   `conf:"default:false"`
 			QueryHook  bool   `conf:"default:false"`
@@ -71,8 +71,8 @@ func run() error {
 	switch cfg.Args.Num(0) {
 	case "migrate":
 		err = migrate(dbConfig)
-	case "seed":
-		err = seed(dbConfig)
+	// case "seed":
+	// 	err = seed(dbConfig)
 	case "useradd":
 		err = useradd(dbConfig, cfg.Args.Num(1), cfg.Args.Num(2))
 	case "keygen":
@@ -103,20 +103,20 @@ func migrate(cfg database.Config) error {
 	return nil
 }
 
-func seed(cfg database.Config) error {
-	db, err := database.Open(cfg)
-	if err != nil {
-		return err
-	}
-	defer db.Close()
+// func seed(cfg database.Config) error {
+// 	db, err := database.Open(cfg)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	defer db.Close()
 
-	if err := schema.Seed(cfg, true); err != nil {
-		return err
-	}
+// 	if err := schema.Seed(cfg, true); err != nil {
+// 		return err
+// 	}
 
-	fmt.Println("Seed data complete")
-	return nil
-}
+// 	fmt.Println("Seed data complete")
+// 	return nil
+// }
 
 func useradd(cfg database.Config, email, password string) error {
 	db, err := database.Open(cfg)

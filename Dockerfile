@@ -23,8 +23,8 @@ WORKDIR /app
 CMD /app/main
 
 LABEL org.opencontainers.image.created="${BUILD_DATE}" \
-      org.opencontainers.image.title="${PACKAGE_NAME}" \
-      org.opencontainers.image.authors="William Kennedy <bill@ardanlabs.com>" \
-      org.opencontainers.image.source="https://github.com/FrankSantoso/service/cmd/${PACKAGE_PREFIX}${PACKAGE_NAME}" \
-      org.opencontainers.image.revision="${VCS_REF}" \
-      org.opencontainers.image.vendor="Ardan Labs"
+    org.opencontainers.image.title="${PACKAGE_NAME}" \
+    org.opencontainers.image.authors="William Kennedy <bill@ardanlabs.com> Alexander Adhyatma <alexadhyatma@asiatech.dev>" \
+    org.opencontainers.image.source="https://github.com/FrankSantoso/service/cmd/${PACKAGE_PREFIX}${PACKAGE_NAME}" \
+    org.opencontainers.image.revision="${VCS_REF}" \
+    org.opencontainers.image.vendor="Asiatech"

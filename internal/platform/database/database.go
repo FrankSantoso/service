@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+
 	"net/url"
 
 	// "github.com/jmoiron/sqlx"
@@ -45,7 +46,6 @@ func (d dbLogger) AfterQuery(c context.Context, q *pg.QueryEvent) (context.Conte
 // Open knows how to open a database connection based on the configuration.
 func Open(cfg Config) (*pg.DB, error) {
 	dbURL := BuildDbURL(cfg)
-
 	// return sqlx.Open("postgres", u.String())
 	connOpt, err := pg.ParseURL(dbURL)
 	if err != nil {
@@ -71,7 +71,6 @@ func BuildDbURL(cfg Config) string {
 	// Query parameters.
 	q := make(url.Values)
 	q.Set("sslmode", sslMode)
-	q.Set("timezone", "utc")
 
 	// Construct url.
 	u := url.URL{

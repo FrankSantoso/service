@@ -40,7 +40,7 @@ const (
 //
 // It returns the database to use as well as a function to call at the end of
 // the test.
-func NewUnit(t *testing.T) (*pg.DB, database.Config, func()) {
+func NewUnit(t *testing.T) (*pg.DB, func()) {
 	t.Helper()
 
 	c := databasetest.StartContainer(t)
@@ -92,7 +92,7 @@ func NewUnit(t *testing.T) (*pg.DB, database.Config, func()) {
 		databasetest.StopContainer(t, c)
 	}
 
-	return db, connConfig, teardown
+	return db, teardown
 }
 
 // Test owns state for running and shutting down tests.
@@ -110,11 +110,11 @@ func NewIntegration(t *testing.T) *Test {
 	t.Helper()
 
 	// Initialize and seed database. Store the cleanup function call later.
-	db, connConfig, cleanup := NewUnit(t)
+	db, cleanup := NewUnit(t)
 
-	if err := schema.Seed(connConfig, true); err != nil {
-		t.Fatal(err)
-	}
+	// if err := schema.Seed(connConfig, true); err != nil {
+	// 	t.Fatal(err)
+	// }
 
 	// Create the logger to use.
 	logger := log.New(os.Stdout, "TEST : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)

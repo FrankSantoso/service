@@ -2,7 +2,6 @@ package user
 
 import (
 	"context"
-	"database/sql"
 	"time"
 
 	"github.com/FrankSantoso/service/internal/platform/auth"
@@ -59,7 +58,7 @@ func Retrieve(ctx context.Context, claims auth.Claims, db *pg.DB, id string) (*U
 
 	var u User
 
-	err := db.Model(u).Where("user_id = ?", id).First()
+	err := db.Model(&u).Where("user_id = ?", id).First()
 
 	if err == pg.ErrNoRows {
 		return nil, ErrNotFound
@@ -93,7 +92,7 @@ func Create(ctx context.Context, db *pg.DB, n NewUser, now time.Time) (*User, er
 	}
 
 	err = db.RunInTransaction(func(tx *pg.Tx) (err error) {
-		if _, err = tx.Model(u).Insert(); err != nil {
+		if _, err = tx.Model(&u).Insert(); err != nil {
 			return err
 		}
 		return nil
@@ -136,7 +135,8 @@ func Update(ctx context.Context, claims auth.Claims, db *pg.DB, id string, upd U
 	u.DateUpdated = now
 
 	err = db.RunInTransaction(func(tx *pg.Tx) error {
-		if _, err := tx.Model(u).UpdateNotZero(); err != nil {
+		if _, err := tx.Model(u).Where("user_id = ?", u.ID).
+			UpdateNotZero(); err != nil {
 			return err
 		}
 		return nil
@@ -160,7 +160,7 @@ func Delete(ctx context.Context, db *pg.DB, id string) error {
 	var u = new(User)
 
 	err := db.RunInTransaction(func(tx *pg.Tx) error {
-		if _, err := tx.Model(&u).Where("user_id = ?", id).Delete(); err != nil {
+		if _, err := tx.Model(u).Where("user_id = ?", id).Delete(); err != nil {
 			return err
 		}
 		return nil
@@ -180,14 +180,12 @@ func Authenticate(ctx context.Context, db *pg.DB, now time.Time, email, password
 	ctx, span := trace.StartSpan(ctx, "internal.user.Authenticate")
 	defer span.End()
 
-	const q = `SELECT * FROM users WHERE email = $1`
-
 	var u User
-	if err := db.GetContext(ctx, &u, q, email); err != nil {
+	if err := db.Model(&u).Where("email = ?", email).First(); err != nil {
 
 		// Normally we would return ErrNotFound in this scenario but we do not want
 		// to leak to an unauthenticated user which emails are in the system.
-		if err == sql.ErrNoRows {
+		if err == pg.ErrNoRows {
 			return auth.Claims{}, ErrAuthenticationFailure
 		}
 
