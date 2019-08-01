@@ -11,7 +11,7 @@ type User struct {
 	Name         string    `sql:"name" json:"name"`
 	Email        string    `sql:"email,unique" json:"email"`
 	Roles        []string  `sql:"roles,array,notnull" json:"roles"`
-	PasswordHash []byte    `sql:"password_hash" json:"-"`
+	PasswordHash string    `sql:"password_hash" json:"-"`
 	DateCreated  time.Time `sql:"date_created" json:"date_created"`
 	DateUpdated  time.Time `sql:"date_updated" json:"date_updated"`
 }

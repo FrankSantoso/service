@@ -85,7 +85,7 @@ func Create(ctx context.Context, db *pg.DB, n NewUser, now time.Time) (*User, er
 		ID:           uuid.New().String(),
 		Name:         n.Name,
 		Email:        n.Email,
-		PasswordHash: hash,
+		PasswordHash: string(hash),
 		Roles:        n.Roles,
 		DateCreated:  now.UTC(),
 		DateUpdated:  now.UTC(),
@@ -129,7 +129,7 @@ func Update(ctx context.Context, claims auth.Claims, db *pg.DB, id string, upd U
 		if err != nil {
 			return errors.Wrap(err, "generating password hash")
 		}
-		u.PasswordHash = pw
+		u.PasswordHash = string(pw)
 	}
 
 	u.DateUpdated = now
@@ -194,7 +194,7 @@ func Authenticate(ctx context.Context, db *pg.DB, now time.Time, email, password
 
 	// Compare the provided password with the saved hash. Use the bcrypt
 	// comparison function so it is cryptographically secure.
-	if err := bcrypt.CompareHashAndPassword(u.PasswordHash, []byte(password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password)); err != nil {
 		return auth.Claims{}, ErrAuthenticationFailure
 	}
 
